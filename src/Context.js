@@ -14,11 +14,11 @@ const ContextProvider = ({ children }) => {
   const [name, setName] = useState('');
   const [call, setCall] = useState({});
   const [me, setMe] = useState('');
-  const senders = useRef([]);
+
   const myVideo = useRef();
   const userVideo = useRef();
   const connectionRef = useRef();
-  const userStream = useRef();
+ 
  console.log(me)
   useEffect(() => {
     navigator.mediaDevices.getUserMedia({ video: true, audio: true })
@@ -80,16 +80,24 @@ const ContextProvider = ({ children }) => {
 
     window.location.reload();
   };
-  
-  function shareScreen() {
-    navigator.mediaDevices.getDisplayMedia({ cursor: true }).then(stream => {
-        const screenTrack = stream.getTracks()[0];
-        senders.current.find(sender => sender.track.kind === 'video').replaceTrack(screenTrack);
-        screenTrack.onended = function() {
-            senders.current.find(sender => sender.track.kind === "video").replaceTrack(userStream.current.getTracks()[1]);
-        }
-    })
-}
+
+  function shareScreen(){
+    navigator.mediaDevices.getDisplayMedia({cursor:true})
+
+
+    .then((currentStream) => {
+      setStream(currentStream);
+
+      myVideo.current.srcObject = currentStream;
+      myVideo.current.replaceTrack(stream.getVideoTracks()[0],currentStream.getVideoTracks()[0],stream)
+      currentStream.getTracks()[0].onended = () =>{
+        myVideo.current.replaceTrack(currentStream.getVideoTracks()[0],stream.getVideoTracks()[0],stream)
+      userVideo.current.srcObject=currentStream
+      }
+    });
+
+   
+  }
   return (
     <SocketContext.Provider value={{
       call,
@@ -104,7 +112,8 @@ const ContextProvider = ({ children }) => {
       callUser,
       leaveCall,
       answerCall,
-      shareScreen
+      shareScreen,
+      
     }}
     >
       {children}
